@@ -35,7 +35,7 @@ public class NodeSystem : MonoBehaviour {
     {
 
         Gizmos.color = Color.cyan;
-        Gizmos.DrawCube(area.center, area.size);
+        Gizmos.DrawWireCube(area.center, area.size);
     }
 
     public float ManHattanDistance(NodeSystem sysEnd)

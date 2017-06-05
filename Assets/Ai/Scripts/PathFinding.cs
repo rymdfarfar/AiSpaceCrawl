@@ -35,9 +35,8 @@ public class PathFinding : MonoBehaviour
         first = true;
         rb = GetComponent<Rigidbody>();
         move = true;
-        Debug.Log(start.myNodeSysId + "STart");
-        Debug.Log(end.myNodeSysId + "End");
-        PathFind(end.transform.position);
+        
+        PathFind(AiManager.instance.GivePosCloseToPlayer(nodeSystem, myNodeManager));
     }
 
     // Update is called once per frame
@@ -54,7 +53,7 @@ public class PathFinding : MonoBehaviour
                 if (index < pathToGoal.Count)
                 {
 
-                    Debug.DrawLine(n.cube.center, pathToGoal[index].cube.center, Color.cyan, 1);
+                    Debug.DrawLine(n.cube.center, pathToGoal[index].cube.center, Color.cyan, 30);
                 }
 
             }
@@ -72,17 +71,19 @@ public class PathFinding : MonoBehaviour
                 indexPos = pathToGoal.Count - 1;
                 firstMove = false;
             }
-
+            nodeSystem = pathToGoal[indexPos].myNodeSysId;
             step = speed * Time.deltaTime;
-            Vector3 moveTo =  pathToGoal[indexPos].transform.position * step;
-            rb.velocity = moveTo;
-            //transform.position = moveTo;
-            gridPos = myNodeManager.WorldPosToGridPos(transform.position, nodeSystem);
 
-            gridId = myNodeManager.PosToIndex(gridPos, nodeSystem);
+            Vector3 moveTo =  pathToGoal[indexPos].transform.position - transform.position;
+            moveTo = moveTo.normalized * step;
+            transform.forward = moveTo;
+            rb.velocity = moveTo;
+            gridPos = AiManager.instance.WorldPosToGridPos(transform.position, nodeSystem, myNodeManager);
+
+            gridId = AiManager.instance.PosToIndex(gridPos, nodeSystem, myNodeManager);
            
 
-            nextNode = gridId != pathToGoal[indexPos].id;
+            nextNode = gridId == pathToGoal[indexPos].id;
 
 
 
@@ -99,6 +100,7 @@ public class PathFinding : MonoBehaviour
             {
                 move = false;
                 checkStartGoal = false;
+                rb.velocity = Vector3.zero;
 
             }
 
@@ -138,13 +140,15 @@ public class PathFinding : MonoBehaviour
             {
                 endSysNumb = ns.id;
             }
-            else if (ns.area.Contains(transform.position))
+            if (ns.area.Contains(transform.position))
             {
                 startSysNumb = ns.id;
+                nodeSystem = ns.id;
             }
         }
-        Node endNode = myNodeManager.nodeSystems[endSysNumb].nodes[myNodeManager.PosToIndex(myNodeManager.WorldPosToGridPos(endPos, endSysNumb), endSysNumb)];
-        Node startNode = myNodeManager.nodeSystems[startSysNumb].nodes[myNodeManager.PosToIndex(myNodeManager.WorldPosToGridPos(transform.position, startSysNumb), startSysNumb)];
+
+        Node endNode = myNodeManager.nodeSystems[endSysNumb].nodes[AiManager.instance.PosToIndex(AiManager.instance.WorldPosToGridPos(endPos, endSysNumb, myNodeManager), endSysNumb, myNodeManager)];
+        Node startNode = myNodeManager.nodeSystems[startSysNumb].nodes[AiManager.instance.PosToIndex(AiManager.instance.WorldPosToGridPos(transform.position, startSysNumb, myNodeManager), startSysNumb, myNodeManager)];
         Debug.Log("pathFinding");
         if (endNode.myNodeSysId != startNode.myNodeSysId)
         {

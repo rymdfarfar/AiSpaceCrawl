@@ -32,7 +32,7 @@ public class Node : MonoBehaviour
  
     public Vector3 pos;
     public Node parent;
-    [HideInInspector]
+    //[HideInInspector]
     public Bounds cube;
 
     
@@ -103,6 +103,12 @@ public class Node : MonoBehaviour
                 Gizmos.color = Color.blue;
                 Gizmos.DrawLine(cube.center, n.cube.center);
             }
+        }
+        else
+        {
+            Gizmos.color = Color.red;
+
+            Gizmos.DrawWireCube(cube.center, cube.size);
         }
 
 
@@ -649,6 +655,7 @@ public class Node : MonoBehaviour
         type = NodeManager.NodeTypes.Standard;
         raycasting = true;
         raytimer = 0.1f;
+        transform.position = cube.center;
       
         EditorApplication.update += EditorUpdate;
       

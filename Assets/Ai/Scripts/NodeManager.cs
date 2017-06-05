@@ -27,7 +27,7 @@ public class NodeManager : MonoBehaviour
 
 
     float height;
-    float widhtX;
+    float width;
     float depth;
   
     [HideInInspector]
@@ -44,9 +44,12 @@ public class NodeManager : MonoBehaviour
 
 
     Vector3 cube;
+    public int playerIndex;
+    public int playerNodsys;
 
 
-    
+    float t;
+    public float updatePlayerPos;
 
     public enum NodeTypes
     {
@@ -69,27 +72,27 @@ public class NodeManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         
-        
-    
-    }
-    public Vector3 WorldPosToGridPos(Vector3 pos, int nodeSys)
-    {
-        Node node = nodeSystems[nodeSys].nodes[0];
-        Vector3 deltaVec = pos -node.transform.position ;
-        float gridX =  deltaVec.x / node.cube.size.x;
-        float girdY = deltaVec.y / node.cube.size.y;
-        float gridZ = deltaVec.z / node.cube.size.z;
-
-        return new Vector3((int)gridX, (int)girdY, (int)gridZ);
 
     }
 
-    public int PosToIndex(Vector3 pos, int ns)
-    {
-        int index = (int)(pos.x + pos.z * nodeSystems[ns].widht + pos.y * (nodeSystems[ns].widht * nodeSystems[ns].depth));
-        return index;
+    //Updates the players indexpos for the grid
+    public void PlayerGirdPos()
+    {   Vector3 playerPos = AiManager.instance.player.transform.position;
+        foreach (NodeSystem ns in nodeSystems)
+        {
+            if (ns.area.Contains(playerPos))
+            {
+                playerNodsys = ns.id;
+                break;
+            }
+        }
+        Vector3 gridPos = AiManager.instance.WorldPosToGridPos(playerPos, playerNodsys, this);
+        playerIndex = AiManager.instance.PosToIndex(gridPos, playerNodsys, this);
     }
+
+   
 
 
     void OnDrawGizmosSelected()
@@ -104,19 +107,19 @@ public class NodeManager : MonoBehaviour
     {
         
        // this figures out how big all nodes bounding boxes will be and fills the current bounds with nodes
-            height = character.transform.lossyScale.y * 1.1f;
-            depth = character.transform.lossyScale.z * 1.1f;
-            widhtX = character.transform.lossyScale.x * 1.1f;
+            height = character.GetComponent<MeshFilter>().sharedMesh.bounds.size.y * 1.1f;
+            depth = character.GetComponent<MeshFilter>().sharedMesh.bounds.size.z * 1.1f;
+            width = character.GetComponent<MeshFilter>().sharedMesh.bounds.size.x * 1.1f;
         
-            cube = new Vector3(widhtX, height, depth);
+            cube = new Vector3(width, height, depth);
 
-            xNumber = (int)(dimensionsOfRoom.size.x / widhtX);
+            xNumber = (int)(dimensionsOfRoom.size.x / width);
             zNumber = (int)(dimensionsOfRoom.size.z / depth);
             yNumber = (int)(dimensionsOfRoom.size.y / height);
             
            
 
-            numberOfNodes =  (xNumber * zNumber) * yNumber;
+       numberOfNodes =  (xNumber * zNumber) * yNumber;
         Debug.Log(numberOfNodes);
         bool zFirst = true;
         int indexY =0;
@@ -197,6 +200,7 @@ public class NodeManager : MonoBehaviour
         Node nodeTemp = temp.GetComponent<Node>();
         nodeTemp.cube.size = cube;
         nodeTemp.cube.center = pos;
+        nodeTemp.transform.position = pos;
         nodeTemp.x = x;
         nodeTemp.y = y;
         nodeTemp.z = z;
@@ -245,6 +249,7 @@ public class NodeManager : MonoBehaviour
           
         }
         nodeSystems.Add(nodeSys);
+        go.transform.position = nodeSys.nodes[0].transform.position;
         nodeSys.sysName = "Node System" + " " + nodeSystems.Count.ToString();
         go.name = nodeSystems[nodeSystems.Count- 1].sysName;
         partitionCreated = true;
