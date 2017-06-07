@@ -73,8 +73,6 @@ public class Node : MonoBehaviour
 
     public void Update()
     {
-
-
         
     }
 

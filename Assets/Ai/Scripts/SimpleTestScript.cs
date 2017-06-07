@@ -5,14 +5,16 @@ using UnityEngine;
 public class SimpleTestScript : MonoBehaviour {
     public NodeManager manager;
     public Vector3 girdPos;
-    public GameObject circle;
+    public Collider box;
+  
 	// Use this for initialization
 	void Start () {
-		
+        box = GetComponent<Collider>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-        girdPos = AiManager.instance.WorldPosToGridPos(transform.position, 2, manager);
+        
+        
 	}
 }

@@ -48,8 +48,7 @@ public class NodeManager : MonoBehaviour
     public int playerNodsys;
 
 
-    float t;
-    public float updatePlayerPos;
+   
 
     public enum NodeTypes
     {
@@ -64,7 +63,7 @@ public class NodeManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-       
+        PlayerGirdPos();
 
 
     }
@@ -78,8 +77,10 @@ public class NodeManager : MonoBehaviour
     }
 
     //Updates the players indexpos for the grid
-    public void PlayerGirdPos()
-    {   Vector3 playerPos = AiManager.instance.player.transform.position;
+    public void PlayerGirdPos()  
+    {
+        Debug.Log("Update");
+        Vector3 playerPos = AiManager.instance.player.transform.position;
         foreach (NodeSystem ns in nodeSystems)
         {
             if (ns.area.Contains(playerPos))
@@ -89,7 +90,12 @@ public class NodeManager : MonoBehaviour
             }
         }
         Vector3 gridPos = AiManager.instance.WorldPosToGridPos(playerPos, playerNodsys, this);
-        playerIndex = AiManager.instance.PosToIndex(gridPos, playerNodsys, this);
+        int temp = AiManager.instance.PosToIndex(gridPos, playerNodsys, this);
+        if (playerIndex < nodeSystems[playerNodsys].nodes.Count && playerIndex > 0)
+        {
+            playerIndex = temp;
+        }
+       
     }
 
    

@@ -23,6 +23,7 @@ public class SystemPathFinding : MonoBehaviour {
 
     public void SysToOpen(int startSys,int endSys)
     {
+        checkStartAndEnd = false;
        
         if (!checkStartAndEnd)
         {

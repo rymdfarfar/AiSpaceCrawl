@@ -6,6 +6,7 @@ public class PathFinding : MonoBehaviour
 {
     public NodeManager myNodeManager;
     public SystemPathFinding sysFinder;
+    public RobotV2 mrRoboto;
     public bool checkStartGoal;
     public bool foundGoal;
 
@@ -18,7 +19,7 @@ public class PathFinding : MonoBehaviour
     public float gridId;
     public Node start;
     public Node end;
- 
+    public bool Patroling;
     public int nodeSystem;
     bool aiMoveToPlayer;
     public bool move;
@@ -31,12 +32,13 @@ public class PathFinding : MonoBehaviour
     void Start()
     {
         //firstMove = true;
+        mrRoboto = GetComponent<RobotV2>();
         sysFinder = GetComponent<SystemPathFinding>();
         first = true;
         rb = GetComponent<Rigidbody>();
         move = true;
         
-        PathFind(AiManager.instance.GivePosCloseToPlayer(nodeSystem, myNodeManager));
+       
     }
 
     // Update is called once per frame
@@ -53,7 +55,7 @@ public class PathFinding : MonoBehaviour
                 if (index < pathToGoal.Count)
                 {
 
-                    Debug.DrawLine(n.cube.center, pathToGoal[index].cube.center, Color.cyan, 30);
+                    Debug.DrawLine(n.cube.center, pathToGoal[index].cube.center, Color.cyan, 0.2f);
                 }
 
             }
@@ -63,7 +65,7 @@ public class PathFinding : MonoBehaviour
     public void MoveAI()
     {
         //Moves the ai to the next node until it gets to it's destination
-        if (move && foundGoal)
+        if (move && foundGoal && pathToGoal.Count > 1)
         {
             if (firstMove)
             {
@@ -73,18 +75,22 @@ public class PathFinding : MonoBehaviour
             }
             nodeSystem = pathToGoal[indexPos].myNodeSysId;
             step = speed * Time.deltaTime;
+          
 
             Vector3 moveTo =  pathToGoal[indexPos].transform.position - transform.position;
             moveTo = moveTo.normalized * step;
-            transform.forward = moveTo;
-            rb.velocity = moveTo;
             gridPos = AiManager.instance.WorldPosToGridPos(transform.position, nodeSystem, myNodeManager);
 
             gridId = AiManager.instance.PosToIndex(gridPos, nodeSystem, myNodeManager);
-           
+
 
             nextNode = gridId == pathToGoal[indexPos].id;
+            if(moveTo != Vector3.zero)
+                transform.forward = moveTo;
 
+
+            rb.velocity = moveTo;
+          
 
 
             if (nextNode)
@@ -101,6 +107,17 @@ public class PathFinding : MonoBehaviour
                 move = false;
                 checkStartGoal = false;
                 rb.velocity = Vector3.zero;
+                if (Patroling)
+                {
+                    MoveToRandomPoint();
+                }
+                else
+                {
+                    FollowPlayer();
+                }
+                 
+
+                Patroling = false;
 
             }
 
@@ -108,16 +125,29 @@ public class PathFinding : MonoBehaviour
         }
 
     }
-   
 
-    void Update()
+    //Gives the AI a new Pos when the player moves or a certain time has passed
+    public void FollowPlayer()
     {
-       
+
+        
+            Debug.Log("NewPos");
+           
+        
+                if (gridId > 0 && gridId < myNodeManager.nodeSystems[nodeSystem].nodes.Count && mrRoboto.currentState == RobotV2.state.Tracking)
+                    PathFind(AiManager.instance.GivePosCloseToPlayer(myNodeManager.playerNodsys, myNodeManager), myNodeManager.playerNodsys);
+            
+            mrRoboto.newDestination = false;
+        
+
     }
+
+    
     
 
-   
-    public Node MoveToRandomPoint()
+
+
+    public int  MoveToRandomPoint()
     {
         //Moves to random Point
         int rnd = Random.Range(0,myNodeManager.nodeSystems[nodeSystem].nodes.Count - 1);
@@ -127,19 +157,19 @@ public class PathFinding : MonoBehaviour
         }
         Debug.Log(rnd);
         Node temp = myNodeManager.nodeSystems[nodeSystem].nodes[rnd];
-        return temp;
+        
+        return temp.id;
     }
 
-    public void PathFind(Vector3 endPos)
+    public void PathFind(int endIndex, int endSys)
     {
-        int endSysNumb = 0;
+        checkStartGoal = false;
+        Debug.Log("pathFinding");
+    
         int startSysNumb = 0;
         foreach (NodeSystem ns in myNodeManager.nodeSystems)
         {
-            if (ns.area.Contains(endPos))
-            {
-                endSysNumb = ns.id;
-            }
+           
             if (ns.area.Contains(transform.position))
             {
                 startSysNumb = ns.id;
@@ -147,9 +177,9 @@ public class PathFinding : MonoBehaviour
             }
         }
 
-        Node endNode = myNodeManager.nodeSystems[endSysNumb].nodes[AiManager.instance.PosToIndex(AiManager.instance.WorldPosToGridPos(endPos, endSysNumb, myNodeManager), endSysNumb, myNodeManager)];
+        Node endNode = myNodeManager.nodeSystems[endSys].nodes[endIndex];
         Node startNode = myNodeManager.nodeSystems[startSysNumb].nodes[AiManager.instance.PosToIndex(AiManager.instance.WorldPosToGridPos(transform.position, startSysNumb, myNodeManager), startSysNumb, myNodeManager)];
-        Debug.Log("pathFinding");
+        
         if (endNode.myNodeSysId != startNode.myNodeSysId)
         {
             sysFinder.SysToOpen(startNode.myNodeSysId, endNode.myNodeSysId);
@@ -329,4 +359,6 @@ public class PathFinding : MonoBehaviour
         }
       
     }
+
+    
 }
